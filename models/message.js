@@ -1,7 +1,7 @@
 var mongoose = require('mongoose');
 var Schema = mongoose.Schema;
 
-var User = require('../models/user');
+var User = require('./user');
 
 var schema = new Schema({
 	content: {type: String, required: true},
@@ -9,10 +9,10 @@ var schema = new Schema({
 });
 
 schema.post('remove', function(message) {
-	User.findById(message.user, function(err, user) {
-		user.messages.pull(message);
-		user.save();
-	});
+    User.findById(message.user, function(err, user) {
+        user.messages.pull(message._id);
+        user.save();
+    });
 });
 
 module.exports = mongoose.model('Message', schema);

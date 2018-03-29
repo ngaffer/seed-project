@@ -7,6 +7,7 @@ var Message = require('../models/message');
 
 router.get('/', function (req, res, next) {
 	Message.find()
+        .populate('user', 'firstName')
 		.exec(function(err, messages) {
 			if(err) {
 	    		return res.status(500).json({
@@ -33,30 +34,30 @@ router.use('/', function(req, res, next) {
     })
 });
 
-router.post('/', function(req, res, next) {
+router.post('/', function (req, res, next) {
     var decoded = jwt.decode(req.query.token);
-    User.findById(decoded.user._id, function(err, user) {
-        if(err) {
+    User.findById(decoded.user._id, function (err, user) {
+        if (err) {
             return res.status(500).json({
-                title: 'An error has occured',
+                title: 'An error occurred',
                 error: err
             });
         }
         var message = new Message({
             content: req.body.content,
-            user: user
+            user: user._id
         });
-        message.save(function(err, result) {
-            if(err) {
+        message.save(function (err, result) {
+            if (err) {
                 return res.status(500).json({
-                    title: 'An error has occured',
+                    title: 'An error occurred',
                     error: err
                 });
             }
             user.messages.push(result);
             user.save();
             res.status(201).json({
-                message: 'Saved Message',
+                message: 'Saved message',
                 obj: result
             });
         });
@@ -64,6 +65,7 @@ router.post('/', function(req, res, next) {
 });
 
 router.patch('/:id', function (req, res, next) {
+    var decoded = jwt.decode(req.query.token);
     Message.findById(req.params.id, function (err, message) {
         if (err) {
             return res.status(500).json({
@@ -75,6 +77,12 @@ router.patch('/:id', function (req, res, next) {
             return res.status(500).json({
                 title: 'Message Not Found!',
                 error: {message: 'Message Not Found!'}
+            });
+        }
+        if (message.user != decoded.user._id) {
+            return res.status(401).json({
+                title: 'Not Authorized',
+                error: {message: 'Users do not match'}
             });
         }
         message.content = req.body.content;
@@ -94,6 +102,7 @@ router.patch('/:id', function (req, res, next) {
 });
 
 router.delete('/:id', function(req, res, next) {
+    var decoded = jwt.decode(req.query.token);
     Message.findById(req.params.id, function (err, message) {
         if (err) {
             return res.status(500).json({
@@ -107,6 +116,12 @@ router.delete('/:id', function(req, res, next) {
                 error: {message: 'Message Not Found!'}
             });
         } 
+        if (message.user != decoded.user._id) {
+            return res.status(401).json({
+                title: 'Not Authorized',
+                error: {message: 'Users do not match'}
+            });
+        }
         message.remove(function(err, result) {
             if (err) {
                 return res.status(500).json({
