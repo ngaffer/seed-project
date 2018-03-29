@@ -13,15 +13,15 @@ router.post('/', function (req, res, next) {
     	email: req.body.email
     });
     user.save(function(err, result) {
-    	if (err) {
+        if (err) {
             return res.status(500).json({
-                title: 'An error has occured',
+                title: 'An error occurred',
                 error: err
             });
         }
         res.status(201).json({
-        	message: 'User created!',
-        	obj: result
+            message: 'User created',
+            obj: result
         });
     });
 });
